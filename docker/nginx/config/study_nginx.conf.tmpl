@@ -1,0 +1,54 @@
+upstream php-fpm {
+  server php:9000; # www pool
+}
+
+server {
+  listen 80;
+  server_name {{ var "NGX_SERVERNAME" }};
+  return 301 https://$host:{{ var "NGX_SERVERPORT" }}$request_uri;
+}
+
+server {
+  listen   443;
+  ssl on;
+  ssl_certificate     /etc/nginx/conf.d/{{ var "NGX_SERVERNAME" }}.crt;
+  ssl_certificate_key /etc/nginx/conf.d/{{ var "NGX_SERVERNAME" }}.key;
+
+  charset utf-8;
+  server_name {{ var "NGX_SERVERNAME" }};
+  server_tokens off;
+
+  root {{ var "NGX_DOCUMENTROOT" | default "/docker" }};
+  index index.php index.html;
+
+  if ($request_method !~ ^(GET|POST|DELETE|PUT|OPTIONS)$) {
+    return 444;
+  }
+
+  location / {
+    try_files $uri $uri/ /index.php?$args;
+  }
+
+  location ~ \.(js|css|png|jpg|gif|swf|ico|pdf|mov|fla|zip|rar)$ {
+    try_files $uri =404;
+  }
+  error_page 404 /404.html;
+
+  # 環境変数を設定
+  if ($host ~* local) {
+    set $env local;
+  }
+
+  # APPLICATION_ENVが未設定なら production をデフォルトとする
+  if ($env = '') {
+    set $env production;
+  }
+
+  location ~ \.php$ {
+    fastcgi_pass php-fpm;
+    fastcgi_index index.php;
+    fastcgi_param SCRIPT_FILENAME $document_root/$fastcgi_script_name;
+    fastcgi_param APPLICATION_ENV $env;
+    include fastcgi_params;
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "study.stylagy.co.jp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "",
+  "devDependencies": {
+    "chokidar-cli": "^1.2.0",
+    "node-bourbon": "^4.2.8",
+    "node-sass": "^3.10.1"
+  }
+}

@@ -1,0 +1,99 @@
+#
+# ローカル開発環境
+#
+version: '2'
+services:
+  # FRONT nginx
+  front_nginx:
+    container_name: front_nginx_container
+    build:
+      context: ./docker/nginx
+      args:
+        CRT_SERVER_NAME: study.stylagy.co.jp
+    ports:
+        - 80:80
+        - 443:443
+    depends_on:
+      - front_php
+    links:
+      - front_php:php
+    environment:
+      NGX_SERVERNAME: study.stylagy.co.jp
+      NGX_SERVERPORT: 4430
+      NGX_DOCUMENTROOT: /docker/study.stylagy.co.jp/web
+    volumes:
+      - ./src:/docker
+      - ./containers_data/nginx/front/log:/var/log/nginx
+
+  # FRONT php-fpm
+  front_php:
+    container_name: front_php_container
+    build: ./docker/php-fpm
+    ports:
+        - 9010:9000
+    depends_on:
+      - mysql
+      - memcached
+      - mysql_test
+    links:
+      - mysql:mysql
+      - memcached:memcached
+      - mysql_test:mysql_test
+    volumes:
+      - ./src:/docker
+      - ./containers_data/php/front/log:/var/log/ap/front
+
+  # フロントDB
+  mysql:
+    container_name: mysql_container
+    build: ./docker/mysql
+    ports:
+      - 3307:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: 'mysql123'
+      MYSQL_DATABASE: 'study'
+      MYSQL_USER: 'study_user'
+      MYSQL_PASSWORD: 'study_password'
+    volumes:
+      - ./containers_data/mysql/web/data:/var/lib/mysql
+      - ./containers_data/mysql/web/log:/var/log/mysql
+      - ./db/initdb.d:/docker-entrypoint-initdb.d
+
+  # node
+  node:
+    container_name: node_container
+    build: ./docker/node
+    environment:
+      SHELL: '/bin/bash'
+    volumes:
+      - ./:/docker
+
+  # memcached
+  memcached:
+    container_name: memcached_contaier
+    image: memcached:1.4-alpine
+    ports:
+      - 11212:11211
+
+  # テスト用DB
+  mysql_test:
+    container_name: mysql_test_container
+    build: ./docker/mysql
+    ports:
+      - 3310:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: 'mysql123'
+    volumes:
+      - ./containers_data/mysql/test/data:/var/lib/mysql
+      - ./containers_data/mysql/test/log:/var/log/mysql
+
+  phpmyadmin:
+    container_name: phpmyadmin-container
+    image: phpmyadmin/phpmyadmin:latest
+    links:
+      - mysql:db
+    ports:
+      - 8181:80
+    environment:
+      MYSQL_USERNAME: root
+      MYSQL_ROOT_PASSWORD: 'mysql123'
