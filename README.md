@@ -11,7 +11,7 @@ js,cssフロントエンド勉強要
 | front_php_container   | Appサーバ |      |
 | mysql_container       | DB(MySQL)サーバ          |      |
 | mysql_test_container  | DB(MySQL)テストサーバ          |      |
-| memcached_contaier    | KVS(memcached)サーバ     |      |
+| memcached_container    | KVS(memcached)サーバ     |      |
 
 ### Git Clone
 * ベースのディレクトリは各自任意の名前で良いです。
@@ -88,7 +88,7 @@ phpmyadmin-container    /run.sh phpmyadmin               Up       0.0.0.0:8181->
 ### 起動(特定のコンテナのみ)
 ```
 $ cd ~/work/study
-$ docker-compose up es
+$ docker-compose up front_php
 ```
 
 ### コンテナにログイン
